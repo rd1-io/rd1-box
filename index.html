@@ -90,6 +90,19 @@
     cursor: pointer;
   }
 
+  /* ---- Textarea ---- */
+  #taNotes {
+    width: 100%; padding: 8px 10px;
+    border: 1px solid #cbd5e1; border-radius: 6px;
+    font-size: 12px; font-family: inherit; color: #1e293b;
+    background: #fff; resize: vertical; line-height: 1.5;
+    transition: border-color 0.15s, box-shadow 0.15s;
+  }
+  #taNotes:focus {
+    outline: none; border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59,130,246,0.12);
+  }
+
   /* ---- Button ---- */
   #btnPdf {
     margin-top: 18px; padding: 11px 0; width: 100%;
@@ -206,6 +219,15 @@
     <input type="checkbox" id="chkHinges" checked>
   </div>
 
+  <h3 id="secNotes">---</h3>
+  <textarea id="taNotes" rows="8" spellcheck="false">1. Материал корпуса — сталь 08ПС, толщина 1,2 мм.
+2. Материал двери — сталь 08ПС, толщина 1,5 мм.
+3. Монтажная панель — сталь 08ПС оцинк., толщина 2 мм.
+4. Сварные швы зачистить. Острые кромки притупить R0,5.
+5. Обезжирить, грунтовать ГФ-021, окрасить порошковой краской RAL 7035 толщиной 60–80 мкм.
+6. Степень защиты — IP54.
+7. Петли и замок — нержавеющая сталь.</textarea>
+
   <button id="btnPdf">---</button>
 </div>
 
@@ -231,11 +253,12 @@ const sinA = Math.sin(ANG);
 let W, H, D, FLANGE, DOOR_INSET, HANDLE_H, VENT_SLOTS, CABLE_HOLES, MOUNT_GAP, HINGE_COUNT;
 let DOOR_W, DOOR_H, PANEL_W, PANEL_H;
 let SHOW_DOOR, SHOW_PANEL, SHOW_HANDLE, SHOW_HINGES;
+let NOTES_TEXT;
 let sW, sH, sD, sDI, sFL;
 let sDoorW, sDoorH, sPanelW, sPanelH;
 let dxDepth, dyDepth;
 let frontX, frontY, sideX, sideY, isoX, isoY;
-let row2Y, doorViewX, panelViewX;
+let row2Y, doorViewX, panelViewX, notesX;
 
 function readInputs() {
   W           = +document.getElementById('inW').value || 400;
@@ -258,6 +281,7 @@ function readInputs() {
   SHOW_PANEL = document.getElementById('chkPanel').checked;
   SHOW_HANDLE = document.getElementById('chkHandle').checked;
   SHOW_HINGES = document.getElementById('chkHinges').checked;
+  NOTES_TEXT = document.getElementById('taNotes').value;
 
   sW = W * SCALE;
   sH = H * SCALE;
@@ -282,6 +306,11 @@ function readInputs() {
   row2Y = frontY + sH + DIM_OFFSET * 2 + 55;
   doorViewX = frontX;
   panelViewX = doorViewX + (SHOW_DOOR ? sDoorW + GAP + DIM_OFFSET : 0);
+
+  let lastViewRight = MARGIN;
+  if (SHOW_DOOR) lastViewRight = doorViewX + sDoorW + DIM_OFFSET;
+  if (SHOW_PANEL) lastViewRight = Math.max(lastViewRight, panelViewX + sPanelW + DIM_OFFSET);
+  notesX = lastViewRight + GAP * 0.4;
 }
 
 // ============================================================
@@ -664,6 +693,89 @@ function drawPanel() {
 }
 
 // ============================================================
+// NOTES VIEW
+// ============================================================
+const NOTES_W = 340;
+const NOTES_PAD = 16;
+const NOTES_LINE_H = 17;
+const NOTES_R = 8;
+
+function roundRect(x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.lineTo(x + w - r, y); ctx.arcTo(x + w, y, x + w, y + r, r);
+  ctx.lineTo(x + w, y + h - r); ctx.arcTo(x + w, y + h, x + w - r, y + h, r);
+  ctx.lineTo(x + r, y + h); ctx.arcTo(x, y + h, x, y + h - r, r);
+  ctx.lineTo(x, y + r); ctx.arcTo(x, y, x + r, y, r);
+  ctx.closePath();
+}
+
+function drawNotes() {
+  if (!NOTES_TEXT || !NOTES_TEXT.trim()) return;
+  const ox = notesX, oy = row2Y;
+  ctx.save();
+
+  ctx.font = 'bold 16px GOST B, sans-serif';
+  ctx.fillStyle = '#222'; ctx.textAlign = 'center';
+  ctx.fillText('Указания', ox + NOTES_W / 2, oy - 15);
+
+  const lines = NOTES_TEXT.split('\n');
+  ctx.font = '13px GOST B, sans-serif';
+  ctx.textAlign = 'left'; ctx.textBaseline = 'top';
+
+  const wrappedLines = [];
+  for (const rawLine of lines) {
+    if (!rawLine.trim()) { wrappedLines.push(''); continue; }
+    const words = rawLine.split(' ');
+    let cur = '';
+    for (const w of words) {
+      const test = cur ? cur + ' ' + w : w;
+      if (ctx.measureText(test).width > NOTES_W - 2 * NOTES_PAD && cur) {
+        wrappedLines.push(cur);
+        cur = w;
+      } else {
+        cur = test;
+      }
+    }
+    if (cur) wrappedLines.push(cur);
+  }
+
+  const boxH = Math.max(wrappedLines.length * NOTES_LINE_H + 2 * NOTES_PAD, 80);
+  roundRect(ox, oy, NOTES_W, boxH, NOTES_R);
+  ctx.fillStyle = '#f4f5f7';
+  ctx.fill();
+
+  ctx.fillStyle = '#333';
+  for (let i = 0; i < wrappedLines.length; i++) {
+    ctx.fillText(wrappedLines[i], ox + NOTES_PAD, oy + NOTES_PAD + i * NOTES_LINE_H);
+  }
+
+  ctx.restore();
+}
+
+function getNotesHeight() {
+  if (!NOTES_TEXT || !NOTES_TEXT.trim()) return 0;
+  ctx.save();
+  ctx.font = '13px GOST B, sans-serif';
+  const lines = NOTES_TEXT.split('\n');
+  let count = 0;
+  for (const rawLine of lines) {
+    if (!rawLine.trim()) { count++; continue; }
+    const words = rawLine.split(' ');
+    let cur = '';
+    for (const w of words) {
+      const test = cur ? cur + ' ' + w : w;
+      if (ctx.measureText(test).width > NOTES_W - 2 * NOTES_PAD && cur) {
+        count++; cur = w;
+      } else { cur = test; }
+    }
+    if (cur) count++;
+  }
+  ctx.restore();
+  return Math.max(count * NOTES_LINE_H + 2 * NOTES_PAD, 80);
+}
+
+// ============================================================
 // MAIN REDRAW
 // ============================================================
 function getCanvasSize() {
@@ -673,16 +785,20 @@ function getCanvasSize() {
   let tw = row1W;
   let th = row1H;
 
-  if (SHOW_DOOR || SHOW_PANEL) {
+  const hasRow2 = SHOW_DOOR || SHOW_PANEL || (NOTES_TEXT && NOTES_TEXT.trim());
+
+  if (hasRow2) {
     const maxRow2H = Math.max(
       SHOW_DOOR ? sDoorH : 0,
-      SHOW_PANEL ? sPanelH : 0
+      SHOW_PANEL ? sPanelH : 0,
+      (NOTES_TEXT && NOTES_TEXT.trim()) ? getNotesHeight() + 25 : 0
     );
     th = row2Y + maxRow2H + DIM_OFFSET + 30;
 
     let row2Right = MARGIN;
     if (SHOW_DOOR) row2Right = doorViewX + sDoorW + DIM_OFFSET;
     if (SHOW_PANEL) row2Right = Math.max(row2Right, panelViewX + sPanelW + DIM_OFFSET);
+    if (NOTES_TEXT && NOTES_TEXT.trim()) row2Right = Math.max(row2Right, notesX + NOTES_W);
     row2Right += MARGIN;
     tw = Math.max(tw, row2Right);
   }
@@ -702,13 +818,18 @@ function renderAll(tw, th) {
   drawIso();
   drawDoor();
   drawPanel();
+  drawNotes();
 }
 
 function redraw() {
   readInputs();
   const [tw, th] = getCanvasSize();
-  canvas.width = tw;
-  canvas.height = th;
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width = tw * dpr;
+  canvas.height = th * dpr;
+  canvas.style.width = tw + 'px';
+  canvas.style.height = th + 'px';
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   renderAll(tw, th);
 }
 
@@ -836,6 +957,7 @@ function setLabels() {
   document.getElementById('lbShowHandle').textContent = 'Ручка и замок';
   document.getElementById('lbShowHinges').textContent = 'Петли';
 
+  document.getElementById('secNotes').textContent = 'Указания';
   document.getElementById('btnPdf').textContent = 'Скачать PDF';
 }
 setLabels();
@@ -851,6 +973,7 @@ function saveSettings() {
   const data = {};
   numberIds.forEach(id => data[id] = document.getElementById(id).value);
   checkIds.forEach(id => data[id] = document.getElementById(id).checked);
+  data.taNotes = document.getElementById('taNotes').value;
   try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); } catch(e) {}
 }
 
@@ -861,6 +984,7 @@ function loadSettings() {
     const data = JSON.parse(raw);
     numberIds.forEach(id => { if (data[id] !== undefined) document.getElementById(id).value = data[id]; });
     checkIds.forEach(id => { if (data[id] !== undefined) document.getElementById(id).checked = data[id]; });
+    if (data.taNotes !== undefined) document.getElementById('taNotes').value = data.taNotes;
   } catch(e) {}
 }
 
@@ -873,6 +997,7 @@ document.querySelectorAll('#sidebar input[type="number"]').forEach(el => {
 document.querySelectorAll('#sidebar input[type="checkbox"]').forEach(el => {
   el.addEventListener('change', () => { saveSettings(); redraw(); });
 });
+document.getElementById('taNotes').addEventListener('input', () => { saveSettings(); redraw(); });
 
 document.fonts.load('16px "GOST B"').then(() => redraw());
 </script>
