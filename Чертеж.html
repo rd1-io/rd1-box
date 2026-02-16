@@ -1,0 +1,850 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>rd1.io</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    display: flex; min-height: 100vh; background: #eef1f5;
+    color: #1e293b;
+  }
+
+  /* ---- Sidebar ---- */
+  #sidebar {
+    width: 340px; min-width: 340px;
+    background: linear-gradient(180deg, #f8fafc 0%, #ffffff 100%);
+    border-right: 1px solid #e2e8f0;
+    padding: 24px 20px;
+    overflow-y: auto;
+    display: flex; flex-direction: column; gap: 7px;
+  }
+
+  #sidebar h2 {
+    font-size: 17px; font-weight: 700; color: #0f172a;
+    margin-bottom: 4px;
+    padding-left: 10px;
+    border-left: 3px solid #3b82f6;
+    line-height: 1.3;
+  }
+
+  #sidebar h3 {
+    font-size: 10.5px; font-weight: 600; color: #94a3b8;
+    text-transform: uppercase; letter-spacing: 0.8px;
+    margin-top: 14px; margin-bottom: 4px;
+    padding-bottom: 5px;
+    border-bottom: 1px solid #e2e8f0;
+  }
+
+  /* ---- Fields ---- */
+  .field {
+    display: flex; align-items: center; gap: 8px;
+    padding: 2px 0;
+  }
+
+  .field label {
+    flex: 1; font-size: 13px; font-weight: 450; color: #475569;
+    white-space: nowrap;
+  }
+
+  .field input[type="number"] {
+    width: 72px; padding: 6px 8px;
+    border: 1px solid #cbd5e1; border-radius: 6px;
+    font-size: 13px; font-weight: 500; text-align: right;
+    color: #1e293b; background: #fff;
+    transition: border-color 0.15s, box-shadow 0.15s;
+  }
+
+  .field input[type="number"]:focus {
+    outline: none; border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59,130,246,0.12);
+  }
+
+  .field .unit {
+    font-size: 11px; font-weight: 500; color: #94a3b8;
+    width: 24px; flex-shrink: 0;
+  }
+
+  /* ---- Checkboxes ---- */
+  .chk-field {
+    padding: 3px 0;
+  }
+
+  .chk-field input[type="checkbox"] {
+    width: 16px; height: 16px;
+    accent-color: #3b82f6;
+    cursor: pointer; flex-shrink: 0;
+    border-radius: 3px;
+  }
+
+  .chk-field label {
+    cursor: pointer;
+  }
+
+  /* ---- Button ---- */
+  #btnPdf {
+    margin-top: 18px; padding: 11px 0; width: 100%;
+    background: #3b82f6; color: #fff;
+    border: none; border-radius: 8px;
+    font-size: 14px; font-weight: 600; cursor: pointer;
+    letter-spacing: 0.2px;
+    box-shadow: 0 1px 3px rgba(59,130,246,0.3);
+    transition: background 0.15s, box-shadow 0.15s, transform 0.1s;
+  }
+  #btnPdf:hover {
+    background: #2563eb;
+    box-shadow: 0 2px 8px rgba(59,130,246,0.35);
+  }
+  #btnPdf:active {
+    background: #1d4ed8; transform: translateY(1px);
+    box-shadow: 0 0 2px rgba(59,130,246,0.3);
+  }
+  #btnPdf:disabled {
+    opacity: 0.6; cursor: default; transform: none;
+  }
+
+  /* ---- Canvas area ---- */
+  #main {
+    flex: 1; display: flex; justify-content: center; align-items: flex-start;
+    padding: 20px; overflow: auto;
+    background:
+      radial-gradient(circle, #d1d5db 0.7px, transparent 0.7px);
+    background-size: 16px 16px;
+    background-color: #eef1f5;
+  }
+
+  canvas {
+    background: #fff;
+    border-radius: 4px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.08), 0 0 0 1px rgba(0,0,0,0.04);
+  }
+</style>
+</head>
+<body>
+
+<div id="sidebar">
+  <h2 id="title">rd1.io</h2>
+
+  <h3 id="secGab">---</h3>
+  <div class="field">
+    <label id="lbW">---</label>
+    <input id="inW" type="number" value="400" min="100" max="2000" step="10">
+    <span class="unit" id="uW"></span>
+  </div>
+  <div class="field">
+    <label id="lbH">---</label>
+    <input id="inH" type="number" value="900" min="200" max="3000" step="10">
+    <span class="unit" id="uH"></span>
+  </div>
+  <div class="field">
+    <label id="lbD">---</label>
+    <input id="inD" type="number" value="350" min="100" max="1500" step="10">
+    <span class="unit" id="uD"></span>
+  </div>
+
+  <h3 id="secDet">---</h3>
+  <div class="field">
+    <label id="lbFlange">---</label>
+    <input id="inFlange" type="number" value="10" min="2" max="30" step="1">
+    <span class="unit" id="uFlange"></span>
+  </div>
+  <div class="field">
+    <label id="lbDoorInset">---</label>
+    <input id="inDoorInset" type="number" value="15" min="5" max="50" step="1">
+    <span class="unit" id="uDoorInset"></span>
+  </div>
+  <div class="field">
+    <label id="lbHandleH">---</label>
+    <input id="inHandleH" type="number" value="60" min="20" max="200" step="5">
+    <span class="unit" id="uHandleH"></span>
+  </div>
+  <div class="field">
+    <label id="lbVentSlots">---</label>
+    <input id="inVentSlots" type="number" value="5" min="0" max="15" step="1">
+    <span class="unit" id="uVentSlots"></span>
+  </div>
+  <div class="field">
+    <label id="lbCableHoles">---</label>
+    <input id="inCableHoles" type="number" value="3" min="0" max="10" step="1">
+    <span class="unit" id="uCableHoles"></span>
+  </div>
+  <div class="field">
+    <label id="lbMountGap">---</label>
+    <input id="inMountGap" type="number" value="40" min="10" max="100" step="5">
+    <span class="unit" id="uMountGap"></span>
+  </div>
+  <div class="field">
+    <label id="lbHinges">---</label>
+    <input id="inHinges" type="number" value="3" min="2" max="6" step="1">
+    <span class="unit" id="uHinges"></span>
+  </div>
+
+  <h3 id="secShow">---</h3>
+  <div class="field chk-field">
+    <label id="lbShowDoor">---</label>
+    <input type="checkbox" id="chkDoor" checked>
+  </div>
+  <div class="field chk-field">
+    <label id="lbShowPanel">---</label>
+    <input type="checkbox" id="chkPanel" checked>
+  </div>
+  <div class="field chk-field">
+    <label id="lbShowHandle">---</label>
+    <input type="checkbox" id="chkHandle" checked>
+  </div>
+  <div class="field chk-field">
+    <label id="lbShowHinges">---</label>
+    <input type="checkbox" id="chkHinges" checked>
+  </div>
+
+  <button id="btnPdf">---</button>
+</div>
+
+<div id="main">
+  <canvas id="c"></canvas>
+</div>
+
+<script>
+const canvas = document.getElementById('c');
+const ctx = canvas.getContext('2d');
+
+const SCALE = 0.38;
+const GAP = 65;
+const MARGIN = 50;
+const DIM_OFFSET = 38;
+const DEPTH_SCALE = 0.5;
+const ANG = Math.PI / 6;
+const cosA = Math.cos(ANG);
+const sinA = Math.sin(ANG);
+
+// State variables (recomputed each redraw)
+let W, H, D, FLANGE, DOOR_INSET, HANDLE_H, VENT_SLOTS, CABLE_HOLES, MOUNT_GAP, HINGE_COUNT;
+let DOOR_W, DOOR_H, PANEL_W, PANEL_H;
+let SHOW_DOOR, SHOW_PANEL, SHOW_HANDLE, SHOW_HINGES;
+let sW, sH, sD, sDI, sFL;
+let sDoorW, sDoorH, sPanelW, sPanelH;
+let dxDepth, dyDepth;
+let frontX, frontY, sideX, sideY, isoX, isoY;
+let row2Y, doorViewX, panelViewX;
+
+function readInputs() {
+  W           = +document.getElementById('inW').value || 400;
+  H           = +document.getElementById('inH').value || 900;
+  D           = +document.getElementById('inD').value || 350;
+  FLANGE      = +document.getElementById('inFlange').value || 10;
+  DOOR_INSET  = +document.getElementById('inDoorInset').value || 15;
+  HANDLE_H    = +document.getElementById('inHandleH').value || 60;
+  VENT_SLOTS  = +document.getElementById('inVentSlots').value || 0;
+  CABLE_HOLES = +document.getElementById('inCableHoles').value || 0;
+  MOUNT_GAP   = +document.getElementById('inMountGap').value || 40;
+  HINGE_COUNT = +document.getElementById('inHinges').value || 3;
+
+  DOOR_W = W - 2 * DOOR_INSET;
+  DOOR_H = H - 2 * DOOR_INSET;
+  PANEL_W = W - 2 * MOUNT_GAP;
+  PANEL_H = H - 2 * MOUNT_GAP;
+
+  SHOW_DOOR = document.getElementById('chkDoor').checked;
+  SHOW_PANEL = document.getElementById('chkPanel').checked;
+  SHOW_HANDLE = document.getElementById('chkHandle').checked;
+  SHOW_HINGES = document.getElementById('chkHinges').checked;
+
+  sW = W * SCALE;
+  sH = H * SCALE;
+  sD = D * SCALE;
+  sDI = DOOR_INSET * SCALE;
+  sFL = FLANGE * SCALE;
+  sDoorW = DOOR_W * SCALE;
+  sDoorH = DOOR_H * SCALE;
+  sPanelW = PANEL_W * SCALE;
+  sPanelH = PANEL_H * SCALE;
+
+  dxDepth = sD * DEPTH_SCALE * cosA;
+  dyDepth = sD * DEPTH_SCALE * sinA;
+
+  frontX = MARGIN + DIM_OFFSET + 5;
+  frontY = MARGIN + 25;
+  sideX = frontX + sW + GAP;
+  sideY = frontY;
+  isoX = sideX + sD + GAP;
+  isoY = frontY + dyDepth + 15;
+
+  row2Y = frontY + sH + DIM_OFFSET * 2 + 55;
+  doorViewX = frontX;
+  panelViewX = doorViewX + (SHOW_DOOR ? sDoorW + GAP + DIM_OFFSET : 0);
+}
+
+// ============================================================
+// DRAWING PRIMITIVES
+// ============================================================
+function line(x1, y1, x2, y2) {
+  ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
+}
+function rect(x, y, w, h) { ctx.strokeRect(x, y, w, h); }
+function dashedRect(x, y, w, h, dash) {
+  ctx.setLineDash(dash || [6,3]); ctx.strokeRect(x, y, w, h); ctx.setLineDash([]);
+}
+function circle(cx, cy, r) {
+  ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI*2); ctx.stroke();
+}
+function filledCircle(cx, cy, r) {
+  ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI*2); ctx.fill();
+}
+function arrowHead(x, y, angle, size) {
+  ctx.save(); ctx.translate(x, y); ctx.rotate(angle);
+  ctx.beginPath(); ctx.moveTo(0,0);
+  ctx.lineTo(-size, -size*0.35); ctx.lineTo(-size, size*0.35);
+  ctx.closePath(); ctx.fill(); ctx.restore();
+}
+
+// ============================================================
+// DIMENSION LINES
+// ============================================================
+function dimH(x1, x2, y, objY, label) {
+  const dir = y > objY ? 1 : -1;
+  ctx.save();
+  ctx.strokeStyle = '#555'; ctx.lineWidth = 0.6;
+  ctx.font = '11px Arial, sans-serif';
+  line(x1, objY + 4*dir, x1, y + 3*dir);
+  line(x2, objY + 4*dir, x2, y + 3*dir);
+  line(x1, y, x2, y);
+  ctx.fillStyle = '#555';
+  arrowHead(x1, y, 0, 6); arrowHead(x2, y, Math.PI, 6);
+  const midX = (x1+x2)/2, tw = ctx.measureText(label).width;
+  ctx.fillStyle='#fff'; ctx.fillRect(midX-tw/2-2, y-13, tw+4, 12);
+  ctx.fillStyle='#333'; ctx.textAlign='center'; ctx.textBaseline='bottom';
+  ctx.fillText(label, midX, y-2);
+  ctx.restore();
+}
+function dimV(y1, y2, x, objX, label) {
+  const dir = x < objX ? -1 : 1;
+  ctx.save();
+  ctx.strokeStyle = '#555'; ctx.lineWidth = 0.6;
+  ctx.font = '11px Arial, sans-serif';
+  line(objX - 4*dir, y1, x - 3*dir, y1);
+  line(objX - 4*dir, y2, x - 3*dir, y2);
+  line(x, y1, x, y2);
+  ctx.fillStyle = '#555';
+  arrowHead(x, y1, Math.PI/2, 6); arrowHead(x, y2, -Math.PI/2, 6);
+  const midY = (y1+y2)/2, tw = ctx.measureText(label).width;
+  ctx.save(); ctx.translate(x, midY); ctx.rotate(-Math.PI/2);
+  ctx.fillStyle='#fff'; ctx.fillRect(-tw/2-2, -13, tw+4, 12);
+  ctx.fillStyle='#333'; ctx.textAlign='center'; ctx.textBaseline='bottom';
+  ctx.fillText(label, 0, -2);
+  ctx.restore(); ctx.restore();
+}
+
+// ============================================================
+// ISOMETRIC (cabinet oblique) HELPERS
+// ============================================================
+function isoProject(x3, y3, z3) {
+  return [x3 + z3*DEPTH_SCALE*cosA, y3 - z3*DEPTH_SCALE*sinA];
+}
+function isoLine(x1,y1,z1, x2,y2,z2) {
+  const [a,b]=isoProject(x1,y1,z1), [c,d]=isoProject(x2,y2,z2);
+  line(isoX+a, isoY+b, isoX+c, isoY+d);
+}
+function isoPoly(pts, fill) {
+  const p = pts.map(v => { const [a,b]=isoProject(v[0],v[1],v[2]); return [isoX+a, isoY+b]; });
+  ctx.beginPath(); ctx.moveTo(p[0][0],p[0][1]);
+  for (let i=1;i<p.length;i++) ctx.lineTo(p[i][0],p[i][1]);
+  ctx.closePath();
+  if (fill) { ctx.fillStyle=fill; ctx.fill(); }
+  ctx.stroke();
+}
+function isoEllipseTop(cx3, cz3, r) {
+  const [a,b]=isoProject(cx3,0,cz3);
+  ctx.beginPath(); ctx.save();
+  ctx.translate(isoX+a, isoY+b); ctx.scale(1, 0.55);
+  ctx.arc(0,0,r,0,Math.PI*2);
+  ctx.restore(); ctx.stroke();
+}
+
+// ============================================================
+// FRONT VIEW
+// ============================================================
+function drawFront() {
+  ctx.save();
+  ctx.font = 'bold 12px Arial, sans-serif';
+  ctx.fillStyle = '#222'; ctx.textAlign = 'center';
+  ctx.fillText('Вид спереди', frontX + sW/2, frontY - 15);
+
+  ctx.lineWidth = 2; ctx.strokeStyle = '#222';
+  rect(frontX, frontY, sW, sH);
+
+  ctx.lineWidth = 0.7; ctx.strokeStyle = '#555';
+  rect(frontX+sFL, frontY+sFL, sW-2*sFL, sH-2*sFL);
+
+  if (SHOW_DOOR) {
+    // Door outline
+    ctx.lineWidth = 1.3; ctx.strokeStyle = '#333';
+    rect(frontX+sDI, frontY+sDI, sW-2*sDI, sH-2*sDI);
+
+    // Hinges
+    if (SHOW_HINGES) {
+      ctx.lineWidth = 0.8; ctx.strokeStyle = '#555';
+      const dT = frontY+sDI, dB = frontY+sH-sDI, dH = dB-dT;
+      for (let i=0; i<HINGE_COUNT; i++) {
+        const hy = dT + dH*(i+1)/(HINGE_COUNT+1);
+        ctx.fillStyle='#ccc';
+        ctx.fillRect(frontX+sDI-3, hy-6, 6, 12);
+        ctx.strokeRect(frontX+sDI-3, hy-6, 6, 12);
+      }
+    }
+
+    // Handle + Lock
+    if (SHOW_HANDLE) {
+      ctx.lineWidth=1; ctx.strokeStyle='#444';
+      const hx = frontX+sW-sDI-16, hy = frontY+sH/2 - HANDLE_H*SCALE/2;
+      const hhs = HANDLE_H*SCALE;
+      ctx.fillStyle='#ddd'; ctx.fillRect(hx,hy,7,hhs); ctx.strokeRect(hx,hy,7,hhs);
+
+      ctx.lineWidth=0.7;
+      const lx=hx+0.5, ly=hy+hhs+8;
+      ctx.fillStyle='#bbb'; ctx.fillRect(lx,ly,6,9);
+      ctx.strokeStyle='#444'; ctx.strokeRect(lx,ly,6,9);
+      ctx.fillStyle='#444'; filledCircle(lx+3,ly+3,1.3);
+      ctx.fillRect(lx+2.3, ly+4, 1.4, 3);
+    }
+
+    // Ventilation
+    ctx.lineWidth=0.6; ctx.strokeStyle='#777';
+    const vTop = frontY+sH-sDI-45, vW = sW*0.4, vX = frontX+(sW-vW)/2;
+    for (let i=0; i<VENT_SLOTS; i++) {
+      const vy = vTop+i*7;
+      line(vX,vy,vX+vW,vy); line(vX,vy+2.5,vX+vW,vy+2.5);
+    }
+  }
+
+  // Cable entry
+  ctx.lineWidth=0.6; ctx.strokeStyle='#999'; ctx.setLineDash([3,2]);
+  const cY = frontY+16, cS = sW/(CABLE_HOLES+1);
+  for (let i=0; i<CABLE_HOLES; i++) circle(frontX+cS*(i+1), cY, 7);
+  ctx.setLineDash([]);
+
+  // Mounting panel
+  if (SHOW_PANEL) {
+    const mg = MOUNT_GAP*SCALE;
+    ctx.lineWidth=0.5; ctx.strokeStyle='#bbb';
+    dashedRect(frontX+mg, frontY+mg, sW-2*mg, sH-2*mg, [4,3]);
+  }
+
+  // Dimensions
+  dimV(frontY, frontY+sH, frontX-DIM_OFFSET, frontX, String(H));
+  dimH(frontX, frontX+sW, frontY+sH+DIM_OFFSET, frontY+sH, String(W));
+  if (SHOW_DOOR) {
+    dimV(frontY+sDI, frontY+sH-sDI, frontX+sW+DIM_OFFSET-5, frontX+sW, String(DOOR_H));
+    dimH(frontX+sDI, frontX+sW-sDI, frontY+sH+DIM_OFFSET*0.45, frontY+sH, String(DOOR_W));
+  }
+
+  ctx.restore();
+}
+
+// ============================================================
+// SIDE VIEW
+// ============================================================
+function drawSide() {
+  ctx.save();
+  ctx.font = 'bold 12px Arial, sans-serif';
+  ctx.fillStyle = '#222'; ctx.textAlign = 'center';
+  ctx.fillText('Вид сбоку', sideX + sD/2, sideY - 15);
+
+  ctx.lineWidth = 2; ctx.strokeStyle = '#222';
+  rect(sideX, sideY, sD, sH);
+
+  ctx.lineWidth = 0.7; ctx.strokeStyle = '#555';
+  line(sideX+sFL, sideY, sideX+sFL, sideY+sH);
+  line(sideX+sD-sFL, sideY, sideX+sD-sFL, sideY+sH);
+  line(sideX, sideY+sFL, sideX+sD, sideY+sFL);
+  line(sideX, sideY+sH-sFL, sideX+sD, sideY+sH-sFL);
+
+  ctx.lineWidth=0.6; ctx.strokeStyle='#999'; ctx.setLineDash([3,2]);
+  circle(sideX+sD/2, sideY+16, 7);
+  ctx.setLineDash([]);
+
+  dimH(sideX, sideX+sD, sideY+sH+DIM_OFFSET, sideY+sH, String(D));
+  ctx.restore();
+}
+
+// ============================================================
+// ISOMETRIC VIEW
+// ============================================================
+function drawIso() {
+  ctx.save();
+  ctx.font = 'bold 12px Arial, sans-serif';
+  ctx.fillStyle = '#222'; ctx.textAlign = 'center';
+  const [lx,ly] = isoProject(sW/2, sH+25, 0);
+  ctx.fillText('Изометрия', isoX+lx, isoY+ly);
+
+  ctx.lineWidth=1.2; ctx.strokeStyle='#222';
+
+  // Right face
+  isoPoly([[sW,0,0],[sW,0,sD],[sW,sH,sD],[sW,sH,0]], '#c0c0c0');
+  // Top face
+  isoPoly([[0,0,0],[sW,0,0],[sW,0,sD],[0,0,sD]], '#ddd');
+
+  // Cable holes on top
+  ctx.lineWidth=0.7; ctx.strokeStyle='#888';
+  const cSt = sW/(CABLE_HOLES+1);
+  for (let i=0;i<CABLE_HOLES;i++) isoEllipseTop(cSt*(i+1), sD*0.5, 5);
+
+  // Front face
+  ctx.lineWidth=1.4; ctx.strokeStyle='#222';
+  isoPoly([[0,0,0],[sW,0,0],[sW,sH,0],[0,sH,0]], '#e8e8e8');
+
+  // Flange border
+  ctx.lineWidth=0.6; ctx.strokeStyle='#aaa';
+  isoPoly([[sFL,sFL,0],[sW-sFL,sFL,0],[sW-sFL,sH-sFL,0],[sFL,sH-sFL,0]], null);
+
+  if (SHOW_DOOR) {
+    // Door
+    ctx.lineWidth=1; ctx.strokeStyle='#666';
+    isoPoly([[sDI,sDI,0],[sW-sDI,sDI,0],[sW-sDI,sH-sDI,0],[sDI,sH-sDI,0]], null);
+
+    // Hinges
+    if (SHOW_HINGES) {
+      ctx.lineWidth=0.7; ctx.strokeStyle='#888';
+      const idT=sDI, idH=sH-2*sDI;
+      for (let i=0;i<HINGE_COUNT;i++) {
+        const hy=idT+idH*(i+1)/(HINGE_COUNT+1);
+        isoPoly([[sDI-2,hy-5,0],[sDI+2,hy-5,0],[sDI+2,hy+5,0],[sDI-2,hy+5,0]], '#ccc');
+      }
+    }
+
+    // Handle + Lock
+    if (SHOW_HANDLE) {
+      ctx.lineWidth=0.8; ctx.strokeStyle='#777';
+      const ihx=sW-sDI-12, ihy=sH/2-HANDLE_H*SCALE/2, ihh=HANDLE_H*SCALE;
+      isoPoly([[ihx,ihy,0],[ihx+5,ihy,0],[ihx+5,ihy+ihh,0],[ihx,ihy+ihh,0]], '#ddd');
+
+      const ilx=ihx+0.5, ily=ihy+ihh+6;
+      isoPoly([[ilx,ily,0],[ilx+4,ily,0],[ilx+4,ily+7,0],[ilx,ily+7,0]], '#bbb');
+    }
+
+    // Ventilation
+    ctx.lineWidth=0.4; ctx.strokeStyle='#999';
+    const vT=sH-sDI-35, vL=sW*0.28, vR=sW*0.72;
+    for (let i=0;i<VENT_SLOTS;i++) {
+      const vy=vT+i*5;
+      isoLine(vL,vy,0,vR,vy,0); isoLine(vL,vy+2,0,vR,vy+2,0);
+    }
+  }
+
+  // Flange edges
+  ctx.lineWidth=0.8; ctx.strokeStyle='#999';
+  isoLine(0,0,0,sW,0,0); isoLine(0,sFL,0,sW,sFL,0);
+  isoLine(0,0,0,0,sH,0); isoLine(sFL,0,0,sFL,sH,0);
+  ctx.lineWidth=0.5; ctx.strokeStyle='#aaa';
+  isoLine(sW,0,sFL,sW,sH,sFL); isoLine(sW,0,sD-sFL,sW,sH,sD-sFL);
+  isoLine(0,0,sFL,sW,0,sFL); isoLine(0,0,sD-sFL,sW,0,sD-sFL);
+
+  ctx.restore();
+}
+
+// ============================================================
+// DOOR VIEW (standalone)
+// ============================================================
+function drawDoor() {
+  if (!SHOW_DOOR) return;
+  const ox = doorViewX, oy = row2Y;
+  ctx.save();
+
+  // Label
+  ctx.font = 'bold 12px Arial, sans-serif';
+  ctx.fillStyle = '#222'; ctx.textAlign = 'center';
+  ctx.fillText('Дверь', ox + sDoorW/2, oy - 15);
+
+  // Door outline
+  ctx.lineWidth = 2; ctx.strokeStyle = '#222';
+  rect(ox, oy, sDoorW, sDoorH);
+
+  // Hinges (left side)
+  if (SHOW_HINGES) {
+    ctx.lineWidth = 0.8; ctx.strokeStyle = '#555';
+    for (let i = 0; i < HINGE_COUNT; i++) {
+      const hy = oy + sDoorH * (i+1) / (HINGE_COUNT+1);
+      ctx.fillStyle = '#ccc';
+      ctx.fillRect(ox - 3, hy - 7, 6, 14);
+      ctx.strokeRect(ox - 3, hy - 7, 6, 14);
+    }
+  }
+
+  // Handle + Lock (right side)
+  if (SHOW_HANDLE) {
+    ctx.lineWidth = 1; ctx.strokeStyle = '#444';
+    const hx = ox + sDoorW - 16;
+    const hy = oy + sDoorH/2 - HANDLE_H*SCALE/2;
+    const hhs = HANDLE_H * SCALE;
+    ctx.fillStyle = '#ddd'; ctx.fillRect(hx, hy, 7, hhs); ctx.strokeRect(hx, hy, 7, hhs);
+
+    ctx.lineWidth = 0.7;
+    const lx = hx + 0.5, ly = hy + hhs + 8;
+    ctx.fillStyle = '#bbb'; ctx.fillRect(lx, ly, 6, 9);
+    ctx.strokeStyle = '#444'; ctx.strokeRect(lx, ly, 6, 9);
+    ctx.fillStyle = '#444'; filledCircle(lx+3, ly+3, 1.3);
+    ctx.fillRect(lx+2.3, ly+4, 1.4, 3);
+  }
+
+  // Ventilation slots (bottom)
+  ctx.lineWidth = 0.6; ctx.strokeStyle = '#777';
+  const vW = sDoorW * 0.45;
+  const vX = ox + (sDoorW - vW) / 2;
+  const vTop = oy + sDoorH - 45;
+  for (let i = 0; i < VENT_SLOTS; i++) {
+    const vy = vTop + i * 7;
+    line(vX, vy, vX + vW, vy);
+    line(vX, vy + 2.5, vX + vW, vy + 2.5);
+  }
+
+  // Dimensions
+  dimV(oy, oy + sDoorH, ox - DIM_OFFSET, ox, String(DOOR_H));
+  dimH(ox, ox + sDoorW, oy + sDoorH + DIM_OFFSET * 0.5, oy + sDoorH, String(DOOR_W));
+
+  ctx.restore();
+}
+
+// ============================================================
+// MOUNTING PANEL VIEW (standalone)
+// ============================================================
+function drawPanel() {
+  if (!SHOW_PANEL) return;
+  const ox = panelViewX, oy = row2Y;
+  ctx.save();
+
+  // Label
+  ctx.font = 'bold 12px Arial, sans-serif';
+  ctx.fillStyle = '#222'; ctx.textAlign = 'center';
+  ctx.fillText('Монтажная панель', ox + sPanelW/2, oy - 15);
+
+  // Panel outline
+  ctx.lineWidth = 2; ctx.strokeStyle = '#222';
+  rect(ox, oy, sPanelW, sPanelH);
+
+  // Mounting holes at corners (4 corners, inset 12px)
+  ctx.lineWidth = 0.8; ctx.strokeStyle = '#666';
+  const holeInset = 12;
+  const hr = 3;
+  const corners = [
+    [ox + holeInset, oy + holeInset],
+    [ox + sPanelW - holeInset, oy + holeInset],
+    [ox + holeInset, oy + sPanelH - holeInset],
+    [ox + sPanelW - holeInset, oy + sPanelH - holeInset]
+  ];
+  for (const [cx, cy] of corners) {
+    circle(cx, cy, hr);
+    filledCircle(cx, cy, 1);
+  }
+
+  // DIN-rail positions (dashed horizontal lines)
+  ctx.lineWidth = 0.7; ctx.strokeStyle = '#999';
+  ctx.setLineDash([5, 3]);
+  const railInset = 20;
+  const railSpacing = 55;
+  const railCount = Math.max(1, Math.floor((sPanelH - 2 * railInset) / railSpacing));
+  for (let i = 0; i < railCount; i++) {
+    const ry = oy + railInset + i * railSpacing + railSpacing / 2;
+    if (ry > oy + sPanelH - railInset) break;
+    line(ox + railInset, ry, ox + sPanelW - railInset, ry);
+    // Rail thickness
+    line(ox + railInset, ry + 4, ox + sPanelW - railInset, ry + 4);
+  }
+  ctx.setLineDash([]);
+
+  // Dimensions
+  dimV(oy, oy + sPanelH, ox - DIM_OFFSET, ox, String(PANEL_H));
+  dimH(ox, ox + sPanelW, oy + sPanelH + DIM_OFFSET * 0.5, oy + sPanelH, String(PANEL_W));
+
+  ctx.restore();
+}
+
+// ============================================================
+// MAIN REDRAW
+// ============================================================
+function getCanvasSize() {
+  const row1W = isoX + sW + dxDepth + MARGIN;
+  const row1H = Math.max(frontY + sH + DIM_OFFSET*2 + 35, isoY + sH + 45);
+
+  let tw = row1W;
+  let th = row1H;
+
+  if (SHOW_DOOR || SHOW_PANEL) {
+    const maxRow2H = Math.max(
+      SHOW_DOOR ? sDoorH : 0,
+      SHOW_PANEL ? sPanelH : 0
+    );
+    th = row2Y + maxRow2H + DIM_OFFSET + 30;
+
+    let row2Right = MARGIN;
+    if (SHOW_DOOR) row2Right = doorViewX + sDoorW + DIM_OFFSET;
+    if (SHOW_PANEL) row2Right = Math.max(row2Right, panelViewX + sPanelW + DIM_OFFSET);
+    row2Right += MARGIN;
+    tw = Math.max(tw, row2Right);
+  }
+
+  return [tw, th];
+}
+
+function renderAll(tw, th) {
+  ctx.fillStyle = '#fff';
+  ctx.fillRect(0, 0, tw, th);
+  ctx.strokeStyle = '#222'; ctx.lineWidth = 1;
+  ctx.strokeRect(3, 3, tw-6, th-6);
+  ctx.fillStyle = '#555'; ctx.font = '10px Arial, sans-serif'; ctx.textAlign = 'center';
+  ctx.fillText('rd1.io — габаритный чертёж (размеры в мм)', tw/2, th-8);
+  drawFront();
+  drawSide();
+  drawIso();
+  drawDoor();
+  drawPanel();
+}
+
+function redraw() {
+  readInputs();
+  const [tw, th] = getCanvasSize();
+  canvas.width = tw;
+  canvas.height = th;
+  renderAll(tw, th);
+}
+
+// ============================================================
+// PDF DOWNLOAD (zero dependencies, builds PDF with embedded JPEG)
+// ============================================================
+async function downloadPDF() {
+  const btn = document.getElementById('btnPdf');
+  btn.disabled = true;
+  btn.textContent = '...';
+
+  try {
+    readInputs();
+    const [tw, th] = getCanvasSize();
+
+    // Render at 3x resolution for sharp PDF
+    const DPR = 3;
+    canvas.width = tw * DPR;
+    canvas.height = th * DPR;
+    ctx.save();
+    ctx.scale(DPR, DPR);
+    renderAll(tw, th);
+    ctx.restore();
+
+    const jpegBlob = await new Promise(r => canvas.toBlob(r, 'image/jpeg', 0.98));
+    const jpegArr = new Uint8Array(await jpegBlob.arrayBuffer());
+    const pw = canvas.width;
+    const ph = canvas.height;
+
+    // Restore normal canvas immediately
+    redraw();
+
+    const f = n => n.toFixed(2);
+    const pageW = Math.max(842, tw * 0.75);
+    const pageH = Math.max(595, th * 0.75);
+    const margin = 18;
+    const sc = Math.min((pageW - 2*margin) / pw, (pageH - 2*margin) / ph);
+    const iw = pw * sc, ih = ph * sc;
+    const ix = (pageW - iw) / 2, iy = (pageH - ih) / 2;
+
+    const cs = 'q ' + f(iw) + ' 0 0 ' + f(ih) + ' ' + f(ix) + ' ' + f(iy) + ' cm /I Do Q';
+    const enc = new TextEncoder();
+    const parts = [];
+    const offsets = [];
+    let pos = 0;
+
+    function w(s) { const b = enc.encode(s); parts.push(b); pos += b.length; }
+    function wb(a) { parts.push(a); pos += a.length; }
+    function mark(n) { offsets[n] = pos; }
+
+    w('%PDF-1.4\n%\xC0\xC1\xC2\xC3\n');
+    mark(1); w('1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n');
+    mark(2); w('2 0 obj\n<< /Type /Pages /Kids [3 0 R] /Count 1 >>\nendobj\n');
+    mark(3); w('3 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 '
+      + f(pageW) + ' ' + f(pageH)
+      + '] /Contents 4 0 R /Resources << /XObject << /I 5 0 R >> >> >>\nendobj\n');
+    mark(4); w('4 0 obj\n<< /Length ' + cs.length + ' >>\nstream\n' + cs + '\nendstream\nendobj\n');
+    mark(5); w('5 0 obj\n<< /Type /XObject /Subtype /Image /Width ' + pw
+      + ' /Height ' + ph
+      + ' /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length '
+      + jpegArr.length + ' >>\nstream\n');
+    wb(jpegArr);
+    w('\nendstream\nendobj\n');
+
+    const xrefPos = pos;
+    w('xref\n0 6\n0000000000 65535 f \n');
+    for (let i = 1; i <= 5; i++)
+      w(String(offsets[i]).padStart(10, '0') + ' 00000 n \n');
+    w('trailer\n<< /Size 6 /Root 1 0 R >>\nstartxref\n' + xrefPos + '\n%%EOF\n');
+
+    const total = parts.reduce((s, p) => s + p.length, 0);
+    const result = new Uint8Array(total);
+    let off = 0;
+    for (const p of parts) { result.set(p, off); off += p.length; }
+
+    const blob = new Blob([result], { type: 'application/pdf' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'rd1io-cabinet.pdf';
+    document.body.appendChild(a); 
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 5000);
+  } catch(e) {
+    alert('PDF error: ' + e.message);
+    redraw();
+  }
+
+  btn.disabled = false;
+  btn.textContent = 'Скачать PDF';
+}
+
+document.getElementById('btnPdf').addEventListener('click', downloadPDF);
+
+// ============================================================
+// LABELS
+// ============================================================
+function setLabels() {
+  document.getElementById('title').textContent = 'Электрошкаф rd1.io';
+  document.getElementById('secGab').textContent = 'Габариты';
+  document.getElementById('secDet').textContent = 'Детали';
+
+  document.getElementById('lbW').textContent = 'Ширина';
+  document.getElementById('lbH').textContent = 'Высота';
+  document.getElementById('lbD').textContent = 'Глубина';
+  document.getElementById('lbFlange').textContent = 'Фланец';
+  document.getElementById('lbDoorInset').textContent = 'Отступ двери';
+  document.getElementById('lbHandleH').textContent = 'Высота ручки';
+  document.getElementById('lbVentSlots').textContent = 'Вентиляция';
+  document.getElementById('lbCableHoles').textContent = 'Кабельные вводы';
+  document.getElementById('lbMountGap').textContent = 'Отступ монтажной панели';
+  document.getElementById('lbHinges').textContent = 'Количество петель';
+
+  ['uW','uH','uD','uFlange','uDoorInset','uHandleH','uMountGap'].forEach(
+    id => document.getElementById(id).textContent = 'мм'
+  );
+  ['uVentSlots','uCableHoles','uHinges'].forEach(
+    id => document.getElementById(id).textContent = 'шт'
+  );
+
+  document.getElementById('secShow').textContent = 'Отобразить';
+  document.getElementById('lbShowDoor').textContent = 'Дверь';
+  document.getElementById('lbShowPanel').textContent = 'Монтажная панель';
+  document.getElementById('lbShowHandle').textContent = 'Ручка и замок';
+  document.getElementById('lbShowHinges').textContent = 'Петли';
+
+  document.getElementById('btnPdf').textContent = 'Скачать PDF';
+}
+setLabels();
+
+// Bind all inputs
+document.querySelectorAll('#sidebar input[type="number"]').forEach(el => {
+  el.addEventListener('input', redraw);
+});
+document.querySelectorAll('#sidebar input[type="checkbox"]').forEach(el => {
+  el.addEventListener('change', redraw);
+});
+
+redraw();
+</script>
+</body>
+</html>
