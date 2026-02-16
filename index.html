@@ -810,7 +810,8 @@ function renderAll(tw, th) {
   ctx.fillStyle = '#fff';
   ctx.fillRect(0, 0, tw, th);
   ctx.strokeStyle = '#222'; ctx.lineWidth = 1;
-  ctx.strokeRect(3, 3, tw-6, th-6);
+  roundRect(3, 3, tw-6, th-6, 4);
+  ctx.stroke();
   ctx.fillStyle = '#555'; ctx.font = '13px GOST B, sans-serif'; ctx.textAlign = 'center';
   ctx.fillText('rd1.io — габаритный чертёж (размеры в мм)', tw/2, th-8);
   drawFront();
