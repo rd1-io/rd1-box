@@ -1080,8 +1080,6 @@ function getFlatSize() {
   let th = flatY + row1MaxH + DIM_OFFSET * 1.5 + 30;
   let tw = flatBodyX + sFlatBodyW + DIM_OFFSET;
   if (SHOW_DOOR) tw = Math.max(tw, flatDoorX + sFlatDoorW + DIM_OFFSET);
-  if (SHOW_PANEL) tw = Math.max(tw, flatPanelX + sPanelW + DIM_OFFSET);
-
   if (FLAT_MODE === 'u') {
     th = flatRow2Y + sTopH + DIM_OFFSET + 30;
     tw = Math.max(tw, flatCeilX + sTopW + DIM_OFFSET);
@@ -1118,7 +1116,6 @@ function renderFlat(tw, th) {
   ctx.fillText('rd1.io — развёртки деталей (размеры в мм)', tw/2, th-8);
   drawFlatBody();
   drawFlatDoor();
-  drawFlatPanel();
   drawFlatFloor();
   drawFlatCeiling();
 }
