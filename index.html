@@ -210,6 +210,10 @@
 const canvas = document.getElementById('c');
 const ctx = canvas.getContext('2d');
 
+const logoImg = new Image();
+logoImg.src = 'tag.png';
+logoImg.onload = () => redraw();
+
 const SCALE = 0.38;
 const GAP = 65;
 const MARGIN = 50;
@@ -269,7 +273,7 @@ function readInputs() {
   sideX = frontX + sW + GAP;
   sideY = frontY;
   isoX = sideX + sD + GAP;
-  isoY = frontY + dyDepth + 15;
+  isoY = frontY + dyDepth / 2;
 
   row2Y = frontY + sH + DIM_OFFSET * 2 + 55;
   doorViewX = frontX;
@@ -434,10 +438,6 @@ function drawFront() {
   // Dimensions
   dimV(frontY, frontY+sH, frontX-DIM_OFFSET, frontX, String(H));
   dimH(frontX, frontX+sW, frontY+sH+DIM_OFFSET, frontY+sH, String(W));
-  if (SHOW_DOOR) {
-    dimV(frontY+sDI, frontY+sH-sDI, frontX+sW+DIM_OFFSET-5, frontX+sW, String(DOOR_H));
-    dimH(frontX+sDI, frontX+sW-sDI, frontY+sH+DIM_OFFSET*0.45, frontY+sH, String(DOOR_W));
-  }
 
   ctx.restore();
 }
@@ -476,7 +476,7 @@ function drawIso() {
   ctx.font = 'bold 12px Arial, sans-serif';
   ctx.fillStyle = '#222'; ctx.textAlign = 'center';
   const [lx,ly] = isoProject(sW/2, sH+25, 0);
-  ctx.fillText('Изометрия', isoX+lx, isoY+ly);
+  
 
   ctx.lineWidth=1.2; ctx.strokeStyle='#222';
 
@@ -698,6 +698,13 @@ function renderAll(tw, th) {
   drawIso();
   drawDoor();
   drawPanel();
+
+  if (logoImg.complete && logoImg.naturalWidth > 0) {
+    const logoSize = 36;
+    const lx = tw - logoSize - 12;
+    const ly = th - logoSize - 12;
+    ctx.drawImage(logoImg, lx, ly, logoSize, logoSize);
+  }
 }
 
 function redraw() {
